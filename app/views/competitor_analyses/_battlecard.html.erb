@@ -1,0 +1,145 @@
+<%
+  data = begin
+    analysis.battlecard.is_a?(String) ? JSON.parse(analysis.battlecard) : analysis.battlecard
+  rescue JSON::ParserError
+    {}
+  end
+%>
+
+<div class="card mb-4">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <div>
+      <h4 class="mb-0"><%= data["competitor_name"] %> Battlecard</h4>
+      <% if analysis.researched_at %>
+        <small class="text-muted">Researched <%= time_ago_in_words(analysis.researched_at) %> ago</small>
+      <% end %>
+    </div>
+    <div class="d-flex gap-2">
+      <%= form_with url: own_product_competitor_analyses_path(analysis.competitor.own_product, analysis.competitor), method: :post do |f| %>
+        <%= f.submit "Refresh Battlecard", class: "btn btn-sm btn-primary" %>
+      <% end %>
+      <%= link_to "Export .md", export_competitor_analysis_path(analysis),
+          class: "btn btn-sm btn-outline-secondary" %>
+      <%= link_to "Delete", competitor_analysis_path(analysis),
+          data: { turbo_method: :delete, turbo_confirm: "Delete this battlecard?" },
+          class: "btn btn-sm btn-outline-danger" %>
+    </div>
+  </div>
+
+  <div class="card-body">
+    <h5 class="card-title text-muted small text-uppercase">What They Offer</h5>
+    <p><%= data["what_they_offer"] %></p>
+
+    <hr>
+
+    <h5 class="card-title text-muted small text-uppercase">Pricing Tiers</h5>
+    <% tiers = Array(data["pricing_tiers"]) %>
+    <% if tiers.any? %>
+      <ul class="list-group list-group-flush mb-3">
+        <% tiers.each do |tier| %>
+          <li class="list-group-item">
+            <div class="d-flex justify-content-between">
+              <strong><%= tier["tier_name"] %></strong>
+              <span class="badge text-bg-secondary"><%= tier["price"] %></span>
+            </div>
+            <small class="text-muted"><%= tier["summary"] %></small>
+          </li>
+        <% end %>
+      </ul>
+    <% else %>
+      <p class="text-muted">Could not retrieve current pricing data.</p>
+    <% end %>
+
+    <hr>
+
+    <h5 class="card-title text-muted small text-uppercase">Top Customer Complaints (from reviews)</h5>
+    <% complaints = Array(data["top_customer_complaints"]) %>
+    <% if complaints.any? %>
+      <ul class="list-group list-group-flush mb-3">
+        <% complaints.each do |complaint| %>
+          <li class="list-group-item">
+            <span class="me-2">⚠️</span><%= complaint %>
+          </li>
+        <% end %>
+      </ul>
+    <% else %>
+      <p class="text-muted">Could not retrieve review data.</p>
+    <% end %>
+
+    <hr>
+
+    <h5 class="card-title text-muted small text-uppercase">Recent News</h5>
+    <p><%= data["recent_news"] || "No recent news found." %></p>
+
+    <hr>
+
+    <h5 class="card-title text-muted small text-uppercase" style="color: var(--accent);">Why You Win</h5>
+    <% talking_points = Array(data["talking_points"]) %>
+    <% if talking_points.any? %>
+      <div class="mb-3">
+        <% talking_points.each do |point| %>
+          <p class="talking-point mb-2"><%= point %></p>
+        <% end %>
+      </div>
+    <% end %>
+
+    <hr>
+
+    <h5 class="card-title text-muted small text-uppercase">Where They Are Stronger</h5>
+    <p class="text-muted"><%= data["competitor_strength"] %></p>
+  </div>
+
+  <div class="card-footer">
+    <small class="text-muted">
+      Battlecard sourced from live web pages on <%= analysis.researched_at&.strftime("%B %-d, %Y") %>.
+      Pricing and availability change frequently. Verify all figures before using in sales or marketing materials.
+    </small>
+  </div>
+</div>
+
+<% if analysis.agent_trace.present? %>
+  <%
+    steps = begin
+      JSON.parse(analysis.agent_trace)
+    rescue JSON::ParserError
+      []
+    end
+  %>
+  <% if steps.any? %>
+    <div class="accordion mb-3" id="research-trace">
+      <div class="accordion-item">
+        <h2 class="accordion-header">
+          <button class="accordion-button collapsed" type="button"
+                  data-bs-toggle="collapse" data-bs-target="#trace-body">
+            How the agent researched this (<%= steps.length %> steps)
+          </button>
+        </h2>
+        <div id="trace-body" class="accordion-collapse collapse">
+          <div class="accordion-body p-0">
+            <div class="list-group list-group-flush">
+              <% steps.each do |step| %>
+                <div class="list-group-item">
+                  <div class="d-flex justify-content-between">
+                    <strong>Step <%= step["step"] %>: <%= step["tool"] %></strong>
+                    <small class="text-muted"><%= step["timestamp"] %></small>
+                  </div>
+                  <div class="text-muted small">Args: <%= step["args"].inspect %></div>
+                  <div class="text-muted small mt-1">Result preview: <em><%= step["result_preview"] %></em></div>
+                </div>
+              <% end %>
+            </div>
+            <div class="p-3">
+              <button class="btn btn-sm btn-outline-secondary" type="button"
+                      data-bs-toggle="collapse" data-bs-target="#raw-response">
+                Show raw response
+              </button>
+              <div class="collapse mt-2" id="raw-response">
+                <pre class="bg-dark border rounded p-2 small" style="overflow-x: auto; max-height: 300px;"><%= analysis.gemini_raw %></pre>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  <% end %>
+<% end %>

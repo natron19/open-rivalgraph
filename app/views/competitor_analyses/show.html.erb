@@ -1,0 +1,52 @@
+<div class="container py-4">
+  <div class="row mb-3">
+    <div class="col">
+      <% competitor = @analysis.competitor %>
+      <% own_product = competitor.own_product %>
+      <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item"><%= link_to own_product.name, own_product %></li>
+          <li class="breadcrumb-item"><%= link_to competitor.company_name, own_product_competitor_path(own_product, competitor) %></li>
+          <li class="breadcrumb-item active">Battlecard</li>
+        </ol>
+      </nav>
+    </div>
+  </div>
+
+  <% if @analysis.status.in?(["pending", "running"]) %>
+    <%= turbo_stream_from @analysis %>
+
+    <div id="analysis-container">
+      <div class="card">
+        <div class="card-body text-center py-5">
+          <div class="spinner-border mb-3" style="border-top-color: var(--accent); width: 3rem; height: 3rem;" role="status">
+            <span class="visually-hidden">Researching...</span>
+          </div>
+          <h5>Research in progress</h5>
+          <p class="text-muted" id="analysis-status">The agent is searching and reading live sources...</p>
+          <p class="text-muted small">This typically takes 30–90 seconds.</p>
+          <%= link_to "Cancel", competitor_analysis_path(@analysis),
+              data: { turbo_method: :delete, turbo_confirm: "Cancel this research run?" },
+              class: "btn btn-outline-secondary btn-sm mt-2" %>
+        </div>
+
+        <div class="card-footer">
+          <h6 class="mb-2 text-muted small">Agent Progress</h6>
+          <div class="list-group list-group-flush" id="agent-progress-feed">
+            <%# Steps appended here via Turbo Stream broadcasts %>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  <% elsif @analysis.status == "complete" %>
+    <div id="analysis-container">
+      <%= render "battlecard", analysis: @analysis %>
+    </div>
+
+  <% else %>
+    <div id="analysis-container">
+      <%= render "error_state", analysis: @analysis, message: @analysis.error_message %>
+    </div>
+  <% end %>
+</div>

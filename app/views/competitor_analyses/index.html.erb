@@ -1,0 +1,33 @@
+<div class="container py-4">
+  <h1>All Battlecards</h1>
+
+  <% if @analyses.any? %>
+    <div class="table-responsive">
+      <table class="table table-dark table-hover">
+        <thead>
+          <tr>
+            <th>Competitor</th>
+            <th>Your Product</th>
+            <th>Researched</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @analyses.each do |analysis| %>
+            <tr>
+              <td><%= analysis.competitor.company_name %></td>
+              <td><%= analysis.competitor.own_product.name %></td>
+              <td><%= time_ago_in_words(analysis.researched_at) %> ago</td>
+              <td><%= link_to "View", competitor_analysis_path(analysis), class: "btn btn-sm btn-outline-secondary" %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  <% else %>
+    <div class="text-center py-5">
+      <p class="text-muted">No battlecards yet.</p>
+      <%= link_to "Go to Products", own_products_path, class: "btn btn-primary" %>
+    </div>
+  <% end %>
+</div>

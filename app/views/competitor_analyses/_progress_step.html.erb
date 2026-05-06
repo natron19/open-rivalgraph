@@ -1,0 +1,9 @@
+<div class="list-group-item list-group-item-action py-2">
+  <% icon = tool_name == "search_web" ? "🔍" : "🔗" %>
+  <span class="me-2"><%= icon %></span>
+  <% if tool_name == "search_web" %>
+    <span class="text-muted small">Searched for: <em><%= args[:query] || args["query"] %></em></span>
+  <% else %>
+    <span class="text-muted small">Read: <em><%= (args[:url] || args["url"]).to_s.truncate(60) %></em></span>
+  <% end %>
+</div>

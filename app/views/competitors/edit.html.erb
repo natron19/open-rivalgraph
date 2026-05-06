@@ -1,0 +1,15 @@
+<div class="container py-4">
+  <div class="row">
+    <div class="col-md-8 col-lg-6">
+      <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item"><%= link_to @own_product.name, @own_product %></li>
+          <li class="breadcrumb-item"><%= link_to @competitor.company_name, own_product_competitor_path(@own_product, @competitor) %></li>
+          <li class="breadcrumb-item active">Edit</li>
+        </ol>
+      </nav>
+      <h1>Edit <%= @competitor.company_name %></h1>
+      <%= render "form", competitor: @competitor %>
+    </div>
+  </div>
+</div>

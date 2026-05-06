@@ -1,0 +1,55 @@
+<div class="container py-4">
+  <div class="row mb-4">
+    <div class="col">
+      <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item"><%= link_to @own_product.name, @own_product %></li>
+          <li class="breadcrumb-item active"><%= @competitor.company_name %></li>
+        </ol>
+      </nav>
+      <h1><%= @competitor.company_name %></h1>
+      <% if @competitor.website.present? %>
+        <p><%= link_to @competitor.website, @competitor.website, target: "_blank", rel: "noopener noreferrer" %></p>
+      <% end %>
+      <% if @competitor.notes.present? %>
+        <p class="text-muted"><%= @competitor.notes %></p>
+      <% end %>
+    </div>
+    <div class="col-auto d-flex align-items-start gap-2">
+      <%= link_to "Edit", edit_own_product_competitor_path(@own_product, @competitor), class: "btn btn-outline-secondary btn-sm" %>
+      <%= link_to "Delete", own_product_competitor_path(@own_product, @competitor),
+          data: { turbo_method: :delete, turbo_confirm: "Delete #{@competitor.company_name} and all its battlecards?" },
+          class: "btn btn-outline-danger btn-sm" %>
+    </div>
+  </div>
+
+  <div class="mb-4">
+    <%= form_with url: own_product_competitor_analyses_path(@own_product, @competitor), method: :post do |f| %>
+      <%= f.submit "Research This Competitor Now", class: "btn btn-primary" %>
+    <% end %>
+  </div>
+
+  <h2 class="h4 mb-3">Research History</h2>
+
+  <% if @analyses.any? %>
+    <div class="list-group">
+      <% @analyses.each do |analysis| %>
+        <div class="list-group-item d-flex justify-content-between align-items-center">
+          <div>
+            <span class="badge <%= analysis.status == 'complete' ? 'text-bg-danger' : analysis.status == 'error' ? 'text-bg-secondary' : 'text-bg-warning' %> me-2">
+              <%= analysis.status %>
+            </span>
+            <% if analysis.researched_at.present? %>
+              <span class="text-muted small">Researched <%= time_ago_in_words(analysis.researched_at) %> ago</span>
+            <% else %>
+              <span class="text-muted small"><%= time_ago_in_words(analysis.created_at) %> ago</span>
+            <% end %>
+          </div>
+          <%= link_to "View Battlecard", competitor_analysis_path(analysis), class: "btn btn-sm btn-outline-secondary" %>
+        </div>
+      <% end %>
+    </div>
+  <% else %>
+    <p class="text-muted">No research runs yet. Click "Research This Competitor Now" to start.</p>
+  <% end %>
+</div>

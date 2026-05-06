@@ -1,0 +1,67 @@
+<h1 class="mb-1">Welcome back, <%= current_user.first_name %>!</h1>
+<p class="text-muted mb-4">Here's what you're tracking.</p>
+
+<div class="row g-3 mb-4">
+  <div class="col-sm-4">
+    <div class="card text-center">
+      <div class="card-body py-4">
+        <div class="display-6 fw-bold"><%= @products_count %></div>
+        <div class="text-muted small mt-1">Product<%= "s" if @products_count != 1 %> tracked</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-sm-4">
+    <div class="card text-center">
+      <div class="card-body py-4">
+        <div class="display-6 fw-bold"><%= @competitors_count %></div>
+        <div class="text-muted small mt-1">Competitor<%= "s" if @competitors_count != 1 %> tracked</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-sm-4">
+    <div class="card text-center">
+      <div class="card-body py-4">
+        <div class="display-6 fw-bold"><%= @battlecards_count %></div>
+        <div class="text-muted small mt-1">Battlecard<%= "s" if @battlecards_count != 1 %> generated</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<% if @recent_analyses.any? %>
+  <div class="card mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <span class="fw-semibold">Recent Battlecards</span>
+      <%= link_to "View all", competitor_analyses_path, class: "btn btn-sm btn-outline-secondary" %>
+    </div>
+    <div class="list-group list-group-flush">
+      <% @recent_analyses.each do |analysis| %>
+        <%= link_to competitor_analysis_path(analysis), class: "list-group-item list-group-item-action d-flex justify-content-between align-items-center" do %>
+          <div>
+            <strong><%= analysis.competitor.company_name %></strong>
+            <span class="text-muted small ms-2">vs <%= analysis.competitor.own_product.name %></span>
+          </div>
+          <small class="text-muted"><%= time_ago_in_words(analysis.researched_at) %> ago</small>
+        <% end %>
+      <% end %>
+    </div>
+  </div>
+<% end %>
+
+<% if @products_count == 0 %>
+  <div class="card">
+    <div class="card-body text-center py-5">
+      <h5 class="mb-2">Add your product to get started</h5>
+      <p class="text-muted mb-4">Define your product and differentiators once, then track as many competitors as you want.</p>
+      <%= link_to "Add your product", new_own_product_path, class: "btn btn-primary" %>
+    </div>
+  </div>
+<% elsif @competitors_count == 0 %>
+  <div class="card">
+    <div class="card-body text-center py-5">
+      <h5 class="mb-2">Add a competitor to research</h5>
+      <p class="text-muted mb-4">Go to your product and add a competitor to start generating battlecards.</p>
+      <%= link_to "Go to Products", own_products_path, class: "btn btn-primary" %>
+    </div>
+  </div>
+<% end %>

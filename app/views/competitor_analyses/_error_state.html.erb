@@ -1,0 +1,8 @@
+<div class="alert alert-danger" role="alert">
+  <h4 class="alert-heading">Research failed</h4>
+  <p><%= message %></p>
+  <hr>
+  <%= form_with url: own_product_competitor_analyses_path(analysis.competitor.own_product, analysis.competitor), method: :post do |f| %>
+    <%= f.submit "Try Again", class: "btn btn-danger" %>
+  <% end %>
+</div>

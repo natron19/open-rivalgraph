@@ -1,0 +1,105 @@
+<div class="row align-items-center g-5 py-4">
+  <div class="col-lg-5">
+    <h1 class="display-5 fw-bold lh-1 mb-3">AI that researches,<br>not guesses</h1>
+    <p class="lead text-muted mb-4">
+      Most AI competitive analysis tools hallucinate stale pricing and invented reviews from training data.
+      <%= ENV.fetch("APP_NAME", "RivalGraph") %> runs a live research agent — it actually reads your
+      competitor's pricing page, G2 reviews, and recent news before writing a word.
+    </p>
+
+    <div class="mb-4">
+      <div class="d-flex gap-3 mb-3">
+        <div class="flex-shrink-0 text-muted fw-bold" style="width: 1.5rem;">1</div>
+        <div>
+          <div class="fw-semibold">Enter a competitor</div>
+          <div class="text-muted small">Name your product, add your top three differentiators, then drop in a competitor's name and website.</div>
+        </div>
+      </div>
+      <div class="d-flex gap-3 mb-3">
+        <div class="flex-shrink-0 text-muted fw-bold" style="width: 1.5rem;">2</div>
+        <div>
+          <div class="fw-semibold">The agent researches live</div>
+          <div class="text-muted small">A Gemini agent searches the web, reads their pricing page, scrapes G2 reviews, and scans for recent news — all from live sources.</div>
+        </div>
+      </div>
+      <div class="d-flex gap-3">
+        <div class="flex-shrink-0 text-muted fw-bold" style="width: 1.5rem;">3</div>
+        <div>
+          <div class="fw-semibold">Get a sourced battlecard</div>
+          <div class="text-muted small">Real pricing tiers, top complaints from actual reviews, a news summary, and three talking points grounded in your differentiators.</div>
+        </div>
+      </div>
+    </div>
+
+    <% if signed_in? %>
+      <%= link_to "Go to dashboard", dashboard_path, class: "btn btn-primary btn-lg" %>
+    <% else %>
+      <%= link_to "Get started free", sign_up_path, class: "btn btn-primary btn-lg me-2" %>
+      <%= link_to "Sign in", sign_in_path, class: "btn btn-outline-secondary btn-lg" %>
+    <% end %>
+  </div>
+
+  <div class="col-lg-7">
+    <div class="card">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <div>
+          <h5 class="mb-0">Notion Battlecard</h5>
+          <small class="text-muted">Researched 3 minutes ago</small>
+        </div>
+        <span class="badge text-bg-danger">Live research</span>
+      </div>
+      <div class="card-body">
+        <p class="text-muted small text-uppercase fw-semibold mb-1">What They Offer</p>
+        <p class="mb-3">Notion is an all-in-one workspace for notes, wikis, databases, and project management. It targets knowledge workers and teams who want flexible, block-based documents that can embed databases, kanban boards, and calendar views within the same page.</p>
+
+        <hr>
+
+        <p class="text-muted small text-uppercase fw-semibold mb-2">Pricing Tiers</p>
+        <ul class="list-group list-group-flush mb-3">
+          <li class="list-group-item px-0">
+            <div class="d-flex justify-content-between">
+              <strong>Free</strong>
+              <span class="badge text-bg-secondary">$0</span>
+            </div>
+            <small class="text-muted">Unlimited pages, up to 10 guests, basic collaboration</small>
+          </li>
+          <li class="list-group-item px-0">
+            <div class="d-flex justify-content-between">
+              <strong>Plus</strong>
+              <span class="badge text-bg-secondary">$10/user/month</span>
+            </div>
+            <small class="text-muted">Unlimited guests, version history, advanced permissions</small>
+          </li>
+          <li class="list-group-item px-0">
+            <div class="d-flex justify-content-between">
+              <strong>Business</strong>
+              <span class="badge text-bg-secondary">$15/user/month</span>
+            </div>
+            <small class="text-muted">SAML SSO, advanced analytics, team spaces, private pages</small>
+          </li>
+        </ul>
+
+        <hr>
+
+        <p class="text-muted small text-uppercase fw-semibold mb-2">Top Customer Complaints</p>
+        <ul class="list-group list-group-flush mb-3">
+          <li class="list-group-item px-0"><span class="me-2">⚠️</span>Per-seat pricing adds up fast for mid-size teams; a 25-person team on Business costs $4,500/year</li>
+          <li class="list-group-item px-0"><span class="me-2">⚠️</span>Can feel overwhelming to set up — reviewers on G2 consistently mention a steep learning curve</li>
+          <li class="list-group-item px-0"><span class="me-2">⚠️</span>No built-in real-time chat; teams still need Slack alongside Notion for day-to-day communication</li>
+        </ul>
+
+        <hr>
+
+        <p class="text-muted small text-uppercase fw-semibold mb-2" style="color: var(--accent) !important;">Why You Win</p>
+        <p class="talking-point mb-2">Basecamp costs $299/month flat for any team size — a 25-person Notion Business team costs $4,500/year, 15x more expensive</p>
+        <p class="talking-point mb-2">Basecamp includes real-time chat, message boards, to-dos, schedules, and docs — Notion requires a separate Slack subscription for communication</p>
+        <p class="talking-point">Basecamp is designed to be calm — Notion's own G2 reviewers cite complexity and setup overwhelm as their top frustrations</p>
+      </div>
+      <div class="card-footer">
+        <small class="text-muted">
+          Sample output — real battlecards are generated live from your competitor's actual pricing page and G2 reviews.
+        </small>
+      </div>
+    </div>
+  </div>
+</div>
