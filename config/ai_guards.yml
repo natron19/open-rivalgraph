@@ -1,0 +1,19 @@
+# Per-app guardrail configuration, read by AiGuardConfig.
+# See docs/ai-guardrails.md (Layer 1b: AiOutputGuard) and docs/ai-evals.md.
+
+# Competitor research is a business task; personal distress is out of scope.
+crisis_terms: []
+
+# Output structure rules per AiTemplate name.
+#   format:        text | json
+#   required_keys: top-level keys the JSON object must contain
+templates:
+  health_ping:
+    format: text
+  # AgentRunJob JSON.parses the final agent text into CompetitorAnalysis#battlecard.
+  # The battlecard partial tolerates missing sections, so only the header and the
+  # core sections are required. The system prompt asks for every key even when
+  # research fails ("Could not retrieve current data").
+  rivalgraph_battlecard_v1:
+    format: json
+    required_keys: [competitor_name, what_they_offer, talking_points]

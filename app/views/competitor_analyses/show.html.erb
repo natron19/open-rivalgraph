@@ -13,10 +13,15 @@
     </div>
   </div>
 
+  <%# data-analysis-status is read by analysis_poll_controller.js, the fallback for broadcasts sent
+      before this page subscribed. %>
+  <div data-analysis-status="<%= @analysis.status %>">
   <% if @analysis.status.in?(["pending", "running"]) %>
     <%= turbo_stream_from @analysis %>
 
-    <div id="analysis-container">
+    <div id="analysis-container"
+         data-controller="analysis-poll"
+         data-analysis-poll-url-value="<%= competitor_analysis_path(@analysis) %>">
       <div class="card">
         <div class="card-body text-center py-5">
           <div class="spinner-border mb-3" style="border-top-color: var(--accent); width: 3rem; height: 3rem;" role="status">
@@ -49,4 +54,5 @@
       <%= render "error_state", analysis: @analysis, message: @analysis.error_message %>
     </div>
   <% end %>
+  </div>
 </div>

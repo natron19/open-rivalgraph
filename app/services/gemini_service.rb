@@ -6,24 +6,29 @@ class GeminiService
   class GatekeeperError     < GeminiError;   end
   class BudgetExceededError < GeminiError;   end
   class TimeoutError        < GeminiError;   end
+  class OutputGuardError    < GeminiError;   end
+  class CrisisError         < GatekeeperError; end
 
   TIMEOUT_SECONDS = ENV.fetch("AI_GLOBAL_TIMEOUT_SECONDS", "15").to_i
   BASE_URL        = "https://generativelanguage.googleapis.com/v1beta"
 
-  def self.generate(template:, variables: {}, user: Current.user)
-    new(template:, variables:, user:).generate
+  # trusted: true skips the user-input gatekeeper. Only for internal callers whose
+  # prompt is not user input (the eval harness LLM judge). Still logged and output-guarded.
+  def self.generate(template:, variables: {}, user: Current.user, trusted: false)
+    new(template:, variables:, user:, trusted:).generate
   end
 
-  def self.generate_with_tools(template:, variables:, tools:, on_tool_call: nil, max_rounds: 6)
-    new(template:, variables:, user: Current.user).generate_with_tools_instance(
+  def self.generate_with_tools(template:, variables:, tools:, on_tool_call: nil, max_rounds: 6, user: Current.user)
+    new(template:, variables:, user:).generate_with_tools_instance(
       tools: tools, on_tool_call: on_tool_call, max_rounds: max_rounds
     )
   end
 
-  def initialize(template:, variables: {}, user:)
+  def initialize(template:, variables: {}, user:, trusted: false)
     @template_name = template
     @variables     = variables
     @user          = user
+    @trusted       = trusted
   end
 
   def generate
@@ -31,7 +36,7 @@ class GeminiService
     rendered_prompt = ai_template.interpolate(@variables)
 
     begin
-      AiGatekeeper.check!(rendered_prompt, @user)
+      AiGatekeeper.check!(rendered_prompt, @user) unless @trusted
     rescue GatekeeperError => e
       LlmRequest.create!(
         user: @user, ai_template: ai_template, template_name: ai_template.name,
@@ -73,6 +78,7 @@ class GeminiService
         cost_estimate_cents:  estimate_cost(prompt_tokens, response_tokens, ai_template.model)
       )
 
+      check_output!(log, ai_template, response_text, rendered_prompt)
       response_text
 
     rescue Timeout::Error
@@ -102,8 +108,16 @@ class GeminiService
     rendered_prompt = ai_template.interpolate(@variables)
     full_prompt     = [ai_template.system_prompt.presence, rendered_prompt].compact.join("\n\n")
 
-    AiGatekeeper.check!(rendered_prompt, @user)
-    AiBudgetChecker.check!(@user) if @user
+    begin
+      AiGatekeeper.check!(rendered_prompt, @user)
+      AiBudgetChecker.check!(@user) if @user
+    rescue GatekeeperError, BudgetExceededError => e
+      LlmRequest.create!(
+        user: @user, ai_template: ai_template, template_name: @template_name,
+        status: e.is_a?(GatekeeperError) ? "gatekeeper_blocked" : "budget_exceeded", error_message: e.message
+      ) if @user
+      raise
+    end
 
     llm_request = LlmRequest.create!(
       user: @user, ai_template: ai_template, template_name: @template_name, status: "pending"
@@ -127,7 +141,8 @@ class GeminiService
           tool_name = fn["name"]
           tool_args = (fn["args"] || {}).transform_keys(&:to_sym)
 
-          result = dispatch_tool(tool_name, tool_args)
+          # Tool results are third-party text: neutralize injection before the model sees them.
+          result = AiGatekeeper.scan_untrusted(dispatch_tool(tool_name, tool_args))
 
           tool_steps << {
             step: step, tool: tool_name, args: tool_args,
@@ -141,9 +156,12 @@ class GeminiService
           text        = candidate&.dig("parts")&.find { |p| p["text"] }&.dig("text") || ""
           duration_ms = ((Time.current - started_at) * 1000).round
           llm_request.update!(status: "success", duration_ms: duration_ms)
+          check_output!(llm_request, ai_template, text, rendered_prompt)
           return { text: text, tool_steps: tool_steps, raw: response.to_json }
         end
       end
+    rescue OutputGuardError
+      raise
     rescue GeminiError => e
       llm_request.update!(status: "error", error_message: e.message)
       raise
@@ -154,6 +172,13 @@ class GeminiService
   end
 
   private
+
+  def check_output!(log, ai_template, response_text, rendered_prompt)
+    AiOutputGuard.check!(response_text, template: ai_template, input: rendered_prompt)
+  rescue OutputGuardError => e
+    log.update!(status: "output_blocked", error_message: e.message)
+    raise
+  end
 
   def call_gemini(ai_template, rendered_prompt)
     full_prompt = [ai_template.system_prompt.presence, rendered_prompt].compact.join("\n\n")
