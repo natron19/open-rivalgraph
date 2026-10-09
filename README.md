@@ -23,7 +23,7 @@ This demo is MIT licensed. Clone it, fork it, extend it. If you improve it, open
 ## Quick Start
 
 ```bash
-git clone https://github.com/your-handle/open-rivalgraph
+git clone https://github.com/natron19/open-rivalgraph
 cd open-rivalgraph
 bin/setup
 cp .env.example .env
