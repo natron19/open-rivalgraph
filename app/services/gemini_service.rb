@@ -191,7 +191,7 @@ class GeminiService
 
     response = Timeout.timeout(TIMEOUT_SECONDS) do
       http.post("#{BASE_URL}/models/#{ai_template.model}:generateContent") do |req|
-        req.params["key"] = ENV.fetch("GEMINI_API_KEY")
+        req.headers["x-goog-api-key"] = ENV.fetch("GEMINI_API_KEY")
         req.body = {
           contents: [{ parts: [{ text: full_prompt }] }],
           generationConfig: {
@@ -234,7 +234,7 @@ class GeminiService
   def call_gemini_with_tools(ai_template, contents, tools)
     api_key = ENV.fetch("GEMINI_API_KEY")
     model   = ai_template.model.presence || "gemini-2.5-flash"
-    url     = "#{BASE_URL}/models/#{model}:generateContent?key=#{api_key}"
+    url     = "#{BASE_URL}/models/#{model}:generateContent"
 
     body = {
       contents: contents,
@@ -246,8 +246,9 @@ class GeminiService
     }
 
     response = Faraday.post(url) do |req|
-      req.headers["Content-Type"] = "application/json"
-      req.body                     = body.to_json
+      req.headers["Content-Type"]   = "application/json"
+      req.headers["x-goog-api-key"] = api_key
+      req.body                       = body.to_json
       req.options.timeout          = ENV.fetch("AI_GLOBAL_TIMEOUT_SECONDS", "30").to_i
     end
 
