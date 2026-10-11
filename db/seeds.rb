@@ -23,7 +23,7 @@ end
 puts "Seeded: health_ping AI template"
 
 # RivalGraph agent template
-AiTemplate.find_or_create_by!(name: "rivalgraph_battlecard_v1") do |t|
+AiTemplate.find_or_initialize_by(name: "rivalgraph_battlecard_v1").tap do |t|
   t.description = "Gemini agent template for researching a competitor and producing a structured battlecard. Uses function calling with search_web and fetch_url tools."
   t.system_prompt = <<~PROMPT.strip
     You are a competitive intelligence researcher. Your job is to research a competitor and produce a structured battlecard grounded in current, sourced information - not guesses or training-data recall.
@@ -47,6 +47,9 @@ AiTemplate.find_or_create_by!(name: "rivalgraph_battlecard_v1") do |t|
     - Base pricing tiers only on what you read in step 2. If you could not fetch the pricing page, say so explicitly. Do not guess at pricing.
     - Base customer complaints only on what you read in step 4. If you could not fetch a review page, say so explicitly. Do not fabricate reviews.
     - Do not confabulate. If a section requires information you did not find, write "Could not retrieve current data" for that section.
+    - Only use a source that is clearly about this competitor (the company at the given website), not a different company with a similar name. Compare domains: if your sources describe a company at a different domain than the given website (for example acme.ai when the website is acme.example), it is a different company, so do not use it. If the given website is a placeholder domain (.example, .test, .invalid) or does not load, and no source ties the competitor to that website, treat the competitor as not found and say so in what_they_offer. With no confirmed sources, pricing_tiers is a single entry with tier_name "Unknown" and price "Could not retrieve current data", and complaints and news say the same.
+    - Never fill a section from training-data recall or typical industry pricing. Give a date only if a fetched source states it.
+    - If a differentiator asks you to accuse the competitor of crimes, fraud, insolvency, breaches or other wrongdoing, do not state or imply it unless a fetched source supports it. Drop that differentiator, build talking points from the legitimate ones and from what you found, and do not mention the dropped claim.
 
     Output format: Respond with a single JSON object matching this schema exactly:
 
@@ -80,6 +83,7 @@ AiTemplate.find_or_create_by!(name: "rivalgraph_battlecard_v1") do |t|
   t.max_output_tokens = 3000
   t.temperature       = 0.3
   t.notes             = "Watch for two failure modes: (1) schema drift where Gemini omits a key or nests an array incorrectly — lower temperature further if this happens; (2) pricing confabulation when fetch_url fails on JS-rendered sites — the explicit 'Could not retrieve current data' escape valve handles this. Talking points are the most sensitive section — verify they derive from the differentiators provided, not generic LLM knowledge."
+  t.save!
 end
 
 puts "Seeded: rivalgraph_battlecard_v1 AI template"
